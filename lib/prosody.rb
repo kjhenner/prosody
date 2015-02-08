@@ -1,49 +1,9 @@
 require 'treat'
 require 'json'
+require 'prosody/markov'
+require 'prosody/cmudict_parser'
 include Treat::Core::DSL
-
-def bigram_to_s(bigram)
-  "#{bigram[0]}_#{bigram[1]}"
-end
-
-def remove_linebreaks(string)
-  string.gsub(/[\n\r]/, ' ')
-end
-
-def load_tokens_from_text(filename)
-  p = phrase(remove_linebreaks(open(filename, &:read)))
-  p.do(:tokenize)
-  p.collect do |t|
-    t.value
-  end
-end
-
-def get_bigrams_from_tokens(tokens)
-  tokens.collect.with_index do |t, i|
-    [t, tokens[i+1] || '']
-  end
-end
-
-def get_markov_hash_from_bigrams(bigrams)
-  hash = {}
-  bigrams.each.with_index do |u, i|
-    hash[bigram_to_s(u)] ||= []
-    hash[bigram_to_s(u)] << bigrams[i+2]
-  end
-  return hash
-end
-
-def serialize_markov_hash(hash, name)
-  File.open("#{name}.json", "w") do |f|
-    f.write(hash.to_json)
-  end
-end
-
-def load_hash_from_json(name)
-  File.open("#{name}.json", "r") do |f|
-    JSON.parse(File.read(f))
-  end
-end
+include Prosody::Markov
 
 def generate(hash, n)
   text = ''
@@ -145,34 +105,13 @@ def merge_hashes(hash_one, hash_two)
   return hash_one
 end
 
-def parse_cmudict
-  cmudict = File.open('cmudict', 'r'){ |f| f.read }
-  matches = cmudict.scan(/^(?<word>\w+)\(?(?<alternate>\d+)?\)?\s+(?<phones>[\w\d ]+)$/)
-  matches = cmudict.scan(/^(?<word>[\w\d]+)\s+(?<phones>[\w\d ]+)$/)
-  dict = {}
-  matches.each{ |e| dict[e[0]] = dict[e[0]] ? dict[e[0]].concat(e[1].split) : [e[1].split]}
-  return dict
-end
-
-def serialize_cmudict(dict)
-  File.open("cmudict.json", "w") do |f|
-    f.write(dict.to_json)
-  end
-end
-
-def load_cmudict_from_json
-  File.open("cmudict.json", "r") do |f|
-    JSON.parse(File.read(f))
-  end
-end
-
 #tokens = load_tokens_from_text('mobydick.txt')
 #bigrams = get_bigrams_from_tokens(tokens)
 #hash = get_markov_hash_from_bigrams(bigrams)
 #serialize_markov_hash(hash)
-hash = load_hash_from_json("mobydick_hash")
+hash = load_hash_from_json("../data/mobydick_hash")
 @cmudict = load_cmudict_from_json
-puts is_rhyme?('I like to eat wheezes', "I have a big cheeses")
-#generate_lines(hash, 16, 3).each do |l|
-#  puts l.flatten.join(' ')
-#end
+#puts is_rhyme?('I like to eat wheezes', "I have a big cheeses")
+generate_lines(hash, 16, 3).each do |l|
+  puts l.flatten.join(' ')
+end
