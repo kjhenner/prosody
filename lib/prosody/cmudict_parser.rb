@@ -3,9 +3,9 @@ module Prosody
     require 'json'
     def parse_cmudict
       cmudict = File.open('data/cmudict', 'r'){ |f| f.read }
-      matches = cmudict.scan(/^([\w\d]+)\s+([\w\d ]+)$/)
+      matches = cmudict.scan(/^([\w\d'-]+)(\(\d+\))?\s+([\w\d ]+)$/)
       matches.inject({}) do |memo, e|
-        memo[e[0]] = memo[e[0]] ? memo[e[0]].concat(parse_phonemes(e[1])) : [parse_phonemes(e[1])]
+        memo[e[0]] = memo[e[0]] ? memo[e[0]] << (parse_phonemes(e[2])) : [parse_phonemes(e[2])]
         memo
       end
     end
@@ -21,7 +21,7 @@ module Prosody
       end
     end
     def load_cmudict_from_json
-      File.open("../data/cmudict.json", "r") do |f|
+      File.open("data/cmudict.json", "r") do |f|
         JSON.parse(File.read(f))
       end
     end
