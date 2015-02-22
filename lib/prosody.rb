@@ -1,9 +1,14 @@
 require 'treat'
 require 'json'
-require 'prosody/markov'
-require 'prosody/cmudict_parser'
+require_relative './prosody/markov'
+require_relative './prosody/cmudict_parser'
+require_relative './prosody/rhyme'
+require_relative './prosody/markov_generator'
 include Treat::Core::DSL
+include Prosody::MarkovGenerator
 include Prosody::Markov
+include Prosody::Rhyme
+include Prosody::CMUDictParser
 
 def generate(hash, n)
   text = ''
@@ -46,33 +51,6 @@ def to_phones(a)
    .flatten
 end
 
-def is_rhyme?(a, b)
-  puts a
-  puts b
-  ra = rhyme_segment(to_phones(a))
-  puts ra
-  rb = rhyme_segment(to_phones(b)) 
-  puts rb
-  ra[:same] == rb[:same] && rb[:different] != ra[:different]
-end
-
-def rhyme_segment(a)
-  rhyme_segment = {same: []}
-  a.reverse!
-  a.each.with_index do |p, i|
-    rhyme_segment[:same] << p
-    if p[-1] == '1' or p[-1] == '2' or p[-1] == '3'
-      rhyme_segment[:different] = a[i+1]
-      break
-    end
-  end
-  return rhyme_segment
-end
-
-def flatten_line(l)
-  l.flatten.reject{ |t| t =~ /[[:punct:]]/ }[-1].downcase
-end
-
 def generate_lines(hash, n, line_length, scheme="abbacddc")
   lines = [generate_line(hash, line_length)]
   scheme_hash = {scheme[0] => lines[0]}
@@ -105,13 +83,14 @@ def merge_hashes(hash_one, hash_two)
   return hash_one
 end
 
+dict = parse_cmudict
+serialize_cmudict(dict)
 #tokens = load_tokens_from_text('mobydick.txt')
 #bigrams = get_bigrams_from_tokens(tokens)
 #hash = get_markov_hash_from_bigrams(bigrams)
 #serialize_markov_hash(hash)
-hash = load_hash_from_json("../data/mobydick_hash")
-@cmudict = load_cmudict_from_json
-#puts is_rhyme?('I like to eat wheezes', "I have a big cheeses")
-generate_lines(hash, 16, 3).each do |l|
-  puts l.flatten.join(' ')
-end
+#hash = load_hash_from_json("../data/mobydick_hash")
+@dict = load_cmudict_from_json
+#generate_lines(hash, 16, 3).each do |l|
+#  puts l.flatten.join(' ')
+#end
