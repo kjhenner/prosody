@@ -6,7 +6,7 @@ module Prosody
       phoneme_dict[token.upcase] || throw(:not_in_phoneme_dict)
     end
     def last_token(string)
-      string.gsub(/[[:punct:]](?=\s)/, '').split.pop
+      string.gsub(/[[:punct:]](?=\s|$)/, '').split.pop
     end
     def rhymes?(a, b, phoneme_dict)
       rhyme_combinations(a, b, phoneme_dict)
@@ -21,7 +21,11 @@ module Prosody
     end
     def rhyme(pronunciations)
       pronunciations.collect do |c| 
-        stress = c.index(c.max_by{ |s| s["stress"] ? s["stress"].to_i : -1 })
+        phoneme_position = c.index(c.max_by{ |s| s["stress"] ? s["stress"].to_i : -1 }) - 1
+        until c[phoneme_position+1]["stress"]
+          phoneme_position -= 1
+        end
+        c[phoneme_position..-1].collect
       end
     end
   end
