@@ -2,13 +2,13 @@ require 'treat'
 require 'json'
 require_relative './prosody/markov'
 require_relative './prosody/cmudict_parser'
+require_relative './prosody/type'
 require_relative './prosody/rhyme'
 require_relative './prosody/markov_generator'
 include Treat::Core::DSL
 include Prosody::MarkovGenerator
 include Prosody::Markov
 include Prosody::Rhyme
-include Prosody::CMUDictParser
 
 def generate(hash, n)
   text = ''
@@ -83,14 +83,14 @@ def merge_hashes(hash_one, hash_two)
   return hash_one
 end
 
-dict = parse_cmudict
-serialize_cmudict(dict)
+#dict = parse_cmudict
+#serialize_cmudict(dict)
 #tokens = load_tokens_from_text('mobydick.txt')
 #bigrams = get_bigrams_from_tokens(tokens)
 #hash = get_markov_hash_from_bigrams(bigrams)
 #serialize_markov_hash(hash)
 #hash = load_hash_from_json("../data/mobydick_hash")
-@dict = load_cmudict_from_json
+#@dict = load_cmudict_from_json
 #generate_lines(hash, 16, 3).each do |l|
 #  puts l.flatten.join(' ')
 #end
