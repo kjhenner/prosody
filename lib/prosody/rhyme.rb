@@ -1,10 +1,12 @@
 module Prosody
+  class Line < Array
+    def initialize
+      super
+    end
+  end
   module Rhyme
     require 'treat'
     include Treat::Core::DSL
-    def token_to_pronunciations(token, phoneme_dict)
-      phoneme_dict[token.upcase] || throw(:not_in_phoneme_dict)
-    end
     def last_token(string)
       string.gsub(/[[:punct:]](?=\s|$)/, '').split.pop
     end
@@ -18,6 +20,12 @@ module Prosody
         return true if p_a[0] != p_b[0] and p_a[1..-1] == p_b[1..-1]
       end
       return false
+    end
+    def pronunciation_strings_rhyme?(a, b)
+      r = /^(?<similarity>([A-Z]+0?\s)*?([A-Z]+[1-2]))(?<difference>((\s[A-Z]+)(?=[\s]))*)/
+
+      a.split.reverse.join(' ')
+      b.split.reverse.join(' ')
     end
     def rhyme(pronunciations)
       pronunciations.collect do |c| 

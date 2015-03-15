@@ -1,29 +1,33 @@
-module Prosody
-  module CMUDictParser
-    require 'json'
-    def parse_cmudict
-      cmudict = File.open('data/cmudict', 'r'){ |f| f.read }
-      matches = cmudict.scan(/^([\w\d'-]+)(\(\d+\))?\s+([\w\d ]+)$/)
-      matches.inject({}) do |memo, e|
-        memo[e[0]] = memo[e[0]] ? memo[e[0]] << (parse_phonemes(e[2])) : [parse_phonemes(e[2])]
-        memo
-      end
-    end
-    def parse_phonemes(phoneme_string)
-      phonemes = phoneme_string.split.collect do |p|
-        m = /(\D+)(\d)?/.match(p)
-        {phoneme: m[1], stress: m[2]}
-      end
-    end
-    def serialize_cmudict(dict)
-      File.open("data/cmudict.json", "w") do |f|
-        f.write(dict.to_json)
-      end
-    end
-    def load_cmudict_from_json
-      File.open("data/cmudict.json", "r") do |f|
-        JSON.parse(File.read(f))
-      end
+class CMUDict
+
+  require 'json'
+
+  attr_reader :dict
+
+  def initialize(filepath='data/cmudict')
+    @dict = load_from_json(filepath)
+    @filepath = filepath
+  end
+
+  def parse(filepath)
+    cmudict = File.open(filepath, 'r'){ |f| f.read }
+    matches = cmudict.scan(/^([\w\d'-]+)(\(\d+\))?\s+([\w\d ]+)$/)
+    @dict = matches.inject({}) do |memo, e|
+      memo[e[0]] = memo[e[0]] ? memo[e[0]] << e[2] : [e[2]]
+      memo
     end
   end
+
+  def serialize(filepath=@filepath)
+    File.open("#{filepath}.json", "w") do |f|
+      f.write(@dict.to_json)
+    end
+  end
+
+  def load_from_json(filepath)
+    File.open("#{filepath}.json", "r") do |f|
+      JSON.parse(File.read(f))
+    end
+  end
+
 end
