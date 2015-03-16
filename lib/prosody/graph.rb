@@ -19,6 +19,15 @@ class BigramNode
     "#{@bigram[0].string} #{@bigram[1].string}"
   end
 
+  def sample_neighbors
+    edge_distribution = []
+    e = @edges
+    e.keys.each do |n|
+      e[n].times{ edge_distribution << n }
+    end
+    edge_distribution.sample
+  end
+
 end
 
 class Graph

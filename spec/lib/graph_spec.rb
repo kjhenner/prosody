@@ -108,5 +108,11 @@ describe BigramNode do
       expect(@bn.edges[@bn2]).to eq(1)
     end
   end
+  describe 'sample_neighbor' do
+    it 'picks a neighbor based on edge weights' do
+      @bn.add_edge(@bn2)
+      expect(@bn.sample_neighbors).to eq(@bn2)
+    end
+  end
 end
 
