@@ -3,20 +3,34 @@ class BigramNode
   attr_accessor :edges
   attr_reader :bigram
 
-  def initialize(type_a, type_b, edges=Hash.new(0))
+  def initialize(type_a, type_b)
     raise ArgumentError, "#{type_a} is not a Type" unless type_a.is_a? Type
     raise ArgumentError, "#{type_b} is not a Type" unless type_b.is_a? Type
     @bigram = [type_a, type_b]
-    @edges = edges
+    @edges = []
   end
 
   def add_edge(node)
     raise ArgumentError, "#{node} is not a BigramNode" unless node.is_a? BigramNode
-    @edges[node] += 1
+    @edges << node.to_string
   end
 
   def to_string
     "#{@bigram[0].string} #{@bigram[1].string}"
+  end
+
+  def sample_neighbors(exclude=nil, rhyme=nil)
+    e = @edges
+    return nil unless e
+    if exclude
+      e = e.reject{ |edge| exclude.includes?(edge) }
+      return nil unless e
+    end
+    if rhyme
+      e = e.select{ |edge| edge.rhymes_with?(rhyme) }
+      return nil unless e
+    end
+    e.sample
   end
 
 end
@@ -59,8 +73,9 @@ class Graph
     bigrams[0..-3].each.with_index do |u, i|
       # Ensure the types are in the instance's @types list
       u.each{ |b| @types[b] ||= Type.new(b) }
+      bigrams[i+2].each{ |b| @types[b] ||= Type.new(b)}
       # Look up the next node if it already exists, or create it
-      next_node = @nodes[bigram_to_s(bigrams[i+2])] ||= BigramNode.new(@types[u[0]], @types[u[1]])
+      next_node = @nodes[bigram_to_s(bigrams[i+2])] || BigramNode.new(@types[bigrams[i+2][0]], @types[bigrams[i+2][1]])
       # Look up the current node if it already exists, or create it
       @nodes[bigram_to_s(u)] ||= BigramNode.new(@types[u[0]], @types[u[1]])
       # Add the next node as an edge of the current node
@@ -69,20 +84,35 @@ class Graph
   end
 
   def bigram_to_s(bigram)
-    "#{bigram[0]}_#{bigram[1]}"
+    "#{bigram[0]} #{bigram[1]}"
   end
 
   def random_node
     @nodes[@nodes.keys.sample]
   end
 
-  def next_node(node)
-    edge_distribution = []
-    e = node.edges
-    e.keys.each do |n|
-      e[n].times{ edge_distribution << n }
-    end
-    edge_distribution.sample
+  def random_node_key
+    @nodes.keys.sample
+  end
+
+  def find_line(length, rhyme=nil, rhyme_point=nil)
+    path = [[random_node_key]]
+    while path.size < length
+      path[0] ||= [random_node_key]
+      current_node = path[-1][0]
+      if length == rhyme_point
+        next_node = @nodes[current_node].sample_neighbors(exclude=path[-1][1], rhyme=rhyme)
+      else
+        next_node = @nodes[current_node].sample_neighbors(exclude=path[-1][1])
+      end
+      if next_node
+        path[-1][1] = next_node
+        path << [next_node]
+      else
+        path.pop
+      end
+    end 
+    return path.collect{ |p| p[0] }.join(' ')
   end
 
 end
