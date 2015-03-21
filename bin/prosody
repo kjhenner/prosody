@@ -1,0 +1,7 @@
+require 'optparse'
+require 'prosody'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: prosody [options]"
+end.parse!
