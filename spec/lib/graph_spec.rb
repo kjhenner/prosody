@@ -66,7 +66,35 @@ describe Graph do
       @g.nodes_from_bigrams(bigrams)
     end
     it 'generates a line without a rhyme specified' do
-      puts @g.find_line(10)
+      expect(@g.find_line(10).is_a? String).to eq(true)
+    end
+    it 'generates a line with a rhyme specified' do
+      r = Type.new('bump')
+      puts @g.find_line(4, r, 2)
+    end
+  end
+  describe 'serialize' do
+    before(:each) do
+      tokens = @g.load_tokens_from_text("data/dicktest.txt")
+      bigrams = @g.get_bigrams_from_tokens(tokens)
+      @g.nodes_from_bigrams(bigrams)
+    end
+    it 'creates a json file representing the graph' do
+      @g.serialize('test')
+      expect(File).to exist('data/test.json') 
+    end
+  end
+  describe 'load_json' do
+    before(:each) do
+      tokens = @g.load_tokens_from_text("data/dicktest.txt")
+      bigrams = @g.get_bigrams_from_tokens(tokens)
+      @g.nodes_from_bigrams(bigrams)
+      @g.serialize('test')
+    end
+    it 'loads from a json file' do
+      g2 = Graph.new
+      g2.load_json('test')
+      expect(g2.nodes.keys).to include('order me')
     end
   end
 end
@@ -97,6 +125,12 @@ describe BigramNode do
     it 'picks a neighbor based on edge weights' do
       @bn.add_edge(@bn2)
       expect(@bn.sample_neighbors).to eq("breast crest")
+    end
+  end
+  describe 'serialize' do
+    it 'returns a hash of its bigrams and edges' do
+      @bn.add_edge(@bn2)
+      expect(@bn.serialize).to eq({"bigram"=>["test", "breast"], "edges"=>["breast crest"]})
     end
   end
 end

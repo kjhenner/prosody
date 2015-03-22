@@ -1,10 +1,10 @@
 require File.expand_path '../../spec_helper.rb', __FILE__
 
 describe 'Type' do
-  d = CMUDict.new
-  t_a = Type.new('abduction', d)
-  t_b = Type.new('fish', d)
-  t_c = Type.new('dish', d)
+  D = CMUDict.new
+  t_a = Type.new('abduction')
+  t_b = Type.new('fish')
+  t_c = Type.new('dish')
   describe 'get_r_matches' do
     it 'sets and gets rhyme matches for self' do
       expect(t_a.get_r_matches[0]['similarity'])
