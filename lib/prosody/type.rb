@@ -1,6 +1,7 @@
 class Type
 
   @@r = /^(?<similarity>([A-Z]+0?\s)*?([A-Z]+[1-2]))(?<difference>((\s[A-Z]+)(?=\s|$))*)/
+  @@d = CMUDict.new
 
   attr_reader :string
 
@@ -9,18 +10,18 @@ class Type
   end
 
   def r_matches
-    return @r_matches if r_matches
+    return @r_matches if @r_matches
     @r_matches = get_r_matches rescue []
   end
 
   def pronunciations
-    return @pronunciations if pronunciations
+    return @pronunciations if @pronunciations
     @pronunciations = string_to_pronunciations 
   end
 
   def string_to_pronunciations
     return '' if /[[:punct:]]/.match(@string)
-    D.dict[@string.upcase] || nil
+    @@d.dict[@string.upcase] || nil
   end
 
   def rhymes_with?(other)
