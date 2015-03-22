@@ -10,6 +10,13 @@ class BigramNode
     @edges = []
   end
 
+  def serialize
+    {
+     'bigram' => @bigram.collect(&:string),
+     'edges' => @edges
+    }
+  end
+
   def add_edge(node)
     raise ArgumentError, "#{node} is not a BigramNode" unless node.is_a? BigramNode
     @edges << node.to_string
@@ -23,7 +30,7 @@ class BigramNode
     e = @edges
     return nil unless e
     if exclude
-      e = e.reject{ |edge| exclude.includes?(edge) }
+      e = e.reject{ |edge| exclude.include?(edge) }
       return nil unless e
     end
     if rhyme
@@ -43,12 +50,48 @@ class Graph
 
   attr_accessor :nodes
 
-  def initialize
+  def initialize(json=nil, text=nil)
+    # { bigram_string => bigram node }
     @nodes = {}
     @types = {}
+    if json
+      load_json(json)
+    end
   end
 
   # Loading and serialization
+  
+  def serialize(name)
+    raise RuntimeError, "No nodes to serialize" if @nodes.empty?
+    raise RuntimeError, "No types to serialize" if @types.empty?
+    h = {
+          'nodes' => @nodes.values.collect(&:serialize),
+          'types' => @types.keys
+        }
+    File.open("data/#{name}.json", "w") do |f|
+      f.write(h.to_json)
+    end
+  end
+
+  def load_json(name)
+    h = File.open("data/#{name}.json", "r") do |f|
+      JSON.parse(File.read(f))
+    end
+    h['types'].each do |t|
+      @types[t] = Type.new(t) 
+    end
+    h['nodes'].each do |n|
+      node = BigramNode.new(@types[n['bigram'][0]], @types[n['bigram'][1]])
+      @nodes[node.to_string] = node
+    end
+    h['nodes'].each do |n|
+      node = @nodes[bigram_to_s(n['bigram'])]
+      n['edges'].each do |e|
+        node.add_edge(@nodes[e]) if @nodes[e]
+      end
+    end
+  end
+
   def remove_linebreaks(string)
     string.gsub(/[\n\r]/, ' ').split.join(' ')
   end
@@ -83,6 +126,27 @@ class Graph
     end
   end
 
+  def sample_neighbors(node, exclude=nil, rhyme=nil)
+    return nil unless node
+    e = node.edges
+    return nil unless e
+    if exclude
+      e = e.reject do |edge| 
+        exclude.include?(edge)
+      end
+      return nil if e.empty?
+    end
+    if rhyme
+      e = e.select do |edge|
+        return nil unless @nodes[edge]
+        type = @nodes[edge].bigram[1]
+        type.rhymes_with?(rhyme)
+      end
+      return nil if e.empty?
+    end
+    e.sample
+  end
+
   def bigram_to_s(bigram)
     "#{bigram[0]} #{bigram[1]}"
   end
@@ -96,18 +160,27 @@ class Graph
   end
 
   def find_line(length, rhyme=nil, rhyme_point=nil)
-    path = [[random_node_key]]
+    starts = @nodes.keys.dup
+    path = [[starts.delete_at(rand(starts.size)), []]]
     while path.size < length
-      path[0] ||= [random_node_key]
+      unless path[0]
+        if starts.empty?
+          puts "No matching lines found!" 
+          break
+        end
+        path[0] = [starts.delete_at(rand(starts.size)), []]
+      end
+      #puts path.collect{ |p| p[0]}.join(' ')
       current_node = path[-1][0]
-      if length == rhyme_point
-        next_node = @nodes[current_node].sample_neighbors(exclude=path[-1][1], rhyme=rhyme)
+      if path.size == rhyme_point
+        #puts path.collect{ |p| p[0]}.join(' ')
+        next_node = sample_neighbors(@nodes[current_node], exclude=path[-1][1], rhyme=rhyme)
       else
-        next_node = @nodes[current_node].sample_neighbors(exclude=path[-1][1])
+        next_node = sample_neighbors(@nodes[current_node], exclude=path[-1][1])
       end
       if next_node
-        path[-1][1] = next_node
-        path << [next_node]
+        path[-1][1] << next_node
+        path << [next_node, []]
       else
         path.pop
       end
