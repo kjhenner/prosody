@@ -168,54 +168,6 @@ class Graph
     "#{bigram[0]} #{bigram[1]}"
   end
 
-  def random_node
-    @nodes[@nodes.keys.sample]
-  end
-
-  def random_node_key
-    @nodes.keys.sample
-  end
-
-  def find_poem(line_length=5, scheme='abba')
-    rhymes = {}
-    line_count = 0
-    starts = @nodes.keys.dup
-    path = [[starts.delete_at(rand(starts.size)), [], '']]
-    while line_count < scheme.length
-      unless path[0]
-        if starts.empty?
-          puts "no matching lines found!"
-          break
-        end
-        path[0] = [starts.delete_at(rand(starts.size)), [], '']
-      end
-      current_node = path[-1][0]
-      if path.size % line_length == 0
-        if rhymes[scheme[line_count]]
-          rhyme = rhymes[scheme[line_count]]
-          next_node = sample_neighbors(@nodes[current_node], exclude=path[-1][1], rhyme=rhyme)
-        else
-          next_node = sample_neighbors(@nodes[current_node], exclude=path[-1][1])
-          rhymes[scheme[line_count]] = @nodes[next_node].bigram[1]
-        end
-      else
-        next_node = sample_neighbors(@nodes[current_node], exclude=path[-1][1])
-      end
-      if next_node
-        path[-1][1] << next_node
-        if path.size % line_length == 0
-          line_count += 1
-          path << [next_node, [], "\n"]
-        else
-          path << [next_node, [], '']
-        end
-      else
-        path.pop
-      end
-    end
-    return path.collect{ |p| p[0] + p[2] }.join(' ')
-  end
-
 end
 
 class Poem
