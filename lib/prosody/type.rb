@@ -34,6 +34,11 @@ class Type
     end
   end
 
+  def stop?
+    return @stop if @stop
+    @stop = /[\.\!\?]/.match(@string) ? true : false
+  end
+
   def check_match_pair_for_rhyme(match_a, match_b)
     return false unless match_a and match_b
     match_a['similarity'] == match_b['similarity'] and
