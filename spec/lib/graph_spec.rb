@@ -49,16 +49,6 @@ describe Graph do
       expect(@g.nodes.keys).to include("'s shoulder-blades")
     end
   end
-  describe 'random_node' do
-    before(:each) do
-      tokens = @g.load_tokens_from_text("data/dicktest.txt")
-      bigrams = @g.get_bigrams_from_tokens(tokens)
-      @g.nodes_from_bigrams(bigrams)
-    end
-    it 'selects a random node' do
-      expect(@g.random_node.is_a? BigramNode).to eq(true)
-    end
-  end
   describe 'serialize' do
     before(:each) do
       tokens = @g.load_tokens_from_text("data/dicktest.txt")
