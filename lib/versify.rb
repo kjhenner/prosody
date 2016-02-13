@@ -1,5 +1,0 @@
-require 'treat'
-require 'json'
-require_relative './versify/graph'
-require_relative './versify/cmudict_parser'
-require_relative './versify/type'

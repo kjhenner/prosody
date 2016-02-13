@@ -51,6 +51,7 @@ class Graph
 
   require 'treat'
   require 'json'
+  include Prosody
   include Treat::Core::DSL
 
   attr_accessor :nodes
@@ -135,7 +136,7 @@ class Graph
     end
   end
 
-  def sample_neighbors(node, exclude=nil, rhyme=nil, final=false)
+  def sample_neighbors(node, exclude=nil, rhyme=nil, final=false, path=nil, meter=nil)
     return nil unless node
     e = node.edges
     return nil unless e
@@ -160,6 +161,12 @@ class Graph
         type.rhymes_with?(rhyme)
       end
       return nil if e.empty?
+    if meter and path
+      e = e.select do |edge|
+        string = "#{path} #{edge}"
+        meter_with_distance(string, meter)[1] < 1
+      end
+    end
     end
     e[rand(e.size)]
   end
@@ -180,6 +187,7 @@ class Poem
     @graph = graph
     @starts = get_starts
     @path = [init_path]
+    @meter = '01'
   end
 
   def to_s
@@ -217,6 +225,16 @@ class Poem
     type = /^[[:punct:]]$/.match(bigram[1].string) ? bigram[0] : bigram[1]
   end
 
+  def generate_line(previous_bigram, length, rhyme, meter, starts_sentence, ends_sentence)
+    line = ''
+    while meter_with_distance(line)[0].size < length
+      if line.size = 0
+        line = first_bigram
+      end
+      next_node = @graph.sample_neighbors(bigram, exclude=excluded_bigrams, rhyme=rhyme, final=final, path=print_path, meter=@meter)
+    end
+  end
+
   def generate
     while @line_count < @scheme.size # while there are fewer lines than specified
       if @path.empty?
@@ -239,7 +257,7 @@ class Poem
         # If the next bigram will complete a line 
         #rhyme = @rhymes[@scheme[@line_count]]
         rhyme = get_rhyme
-        next_node = @graph.sample_neighbors(bigram, exclude=excluded_bigrams, rhyme=rhyme, final=final)
+        next_node = @graph.sample_neighbors(bigram, exclude=excluded_bigrams, rhyme=rhyme, final=final, path=print_path, meter=@meter)
         next_path_element = {
           bigram: next_node,
           excluded_bigrams: [],
@@ -247,7 +265,7 @@ class Poem
         }
       else
         # If the next bigram won't complete a line
-        next_node = @graph.sample_neighbors(bigram, exclude=excluded_bigrams, rhyme=nil, final=nil)
+        next_node = @graph.sample_neighbors(bigram, exclude=excluded_bigrams, rhyme=nil, final=nil, path=print_path, meter=@meter)
         next_path_element = {
           bigram: next_node,
           excluded_bigrams: [],

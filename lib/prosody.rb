@@ -1,0 +1,6 @@
+require 'treat'
+require 'json'
+require_relative './prosody/cmudict_parser'
+require_relative './prosody/prosody'
+require_relative './prosody/graph'
+require_relative './prosody/type'
