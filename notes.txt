@@ -1,0 +1,17 @@
+What are the requirements for the next node?
+  - meter
+      Single-edge metrical fit is independent of path. This could be handled
+      three different ways:
+        1. As the graph is constructed initially,
+        2. After the graph is constructed, as a mutation to the graph,
+        3. As the graph is traversed, as a persistent mutation.
+      It would be very ineffecient to compute multi-edge metrical fit over
+      the whole graph. We don't want to bother calculating this for paths
+      that would have a bad single-edge fit. We may also want to consider
+      concurrence weight.
+      What if we look initially for chains of metrical fit, then attempt to
+      stitch them together?
+  - rhyme
+  - cooccurance weight
+  def evaluate_fit(u, v) #Considering rhyme, meter, and weight
+  sort edges for best fit
