@@ -34,6 +34,10 @@ module Prosody
       end
     end
 
+    def inspect
+      "#<Prosody::Dictionary:#{object_id}>"
+    end
+
     def serialize(filepath)
       File.open("#{filepath}", "w") do |f|
         f.write(@dict.to_json)
@@ -70,6 +74,7 @@ module Prosody
         .reject{ |t| /[[:punct:]]/.match(t) }
         .map{ |t| token_stress(t) }
       first, *rest = *p
+      return [] unless first
       combinations = first
         .product(*rest)
         .map(&:join)

@@ -2,8 +2,9 @@ module Prosody
   
   class MarkovGenerator
 
-    def initialize(graph)
+    def initialize(graph, dictionary)
       @graph = graph
+      @dictionary = dictionary
     end
 
     def sample_graph_vertices

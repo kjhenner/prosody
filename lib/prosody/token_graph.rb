@@ -16,9 +16,11 @@ module Prosody
       @edge_properties_map = RGL::EdgePropertiesMap.new(@edge_properties_lambda, true)
     end
   
-    def self.new_from_ngram_pairs(ngram_pairs)
+    def self.new_from_ngram_pairs(ngram_pairs, filter=nil)
       result = new
       ngram_pairs.each do |ngram_pair|
+        if filter
+        end
         result.add_or_weight_edge(ngram_pair[0], ngram_pair[1], 1.0)
       end
       result
@@ -27,6 +29,10 @@ module Prosody
     def self.new_from_text_file(file, ngram_size=2)
       ngram_pairs = ngram_pairs_from_file(file, ngram_size)
       self.new_from_ngram_pairs(ngram_pairs)
+    end
+
+    def inspect
+      "#<Prosody::TokenGraph:#{object_id}>"
     end
 
     def add_or_weight_edge(u, v, weight)
@@ -48,6 +54,15 @@ module Prosody
 
     def edge_weight(edge)
       @edge_properties[edge]
+    end
+
+    # Remove all vertices for which the block returns true 
+    def filter_vertices!
+      @vertices.each do |vertex|
+        if yield(vertex)
+          remove_vertex(vertex)
+        end
+      end
     end
 
     def sample_weighted_vertex_edges(vertex)
